@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora BCV</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px;
+        }
+        .app-container { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 400px; 
+        }
+        h2 { margin-top: 0; color: #333; text-align: center; }
+        .tasas-caja { 
+            background: #e9ecef; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        label { font-weight: bold; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; }
+        input, select, button { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        .btn-calcular { 
+            background-color: #0056b3; 
+            color: white; 
+            border: none; 
+            margin-top: 20px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn-calcular:hover { background-color: #004494; }
+        .resultado-caja { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #d4edda; 
+            color: #155724; 
+            border-radius: 8px; 
+            text-align: center; 
+            font-size: 1.5em; 
+            font-weight: bold;
+        }
+        .equivalencias-caja {
+            margin-top: 15px;
+            font-size: 0.65em; 
+            color: #495057;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            display: none; 
+            text-align: left;
+            font-weight: normal;
+        }
+        .equivalencias-caja b {
+            color: #0056b3;
+        }
+        .historial-caja {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        .historial-caja h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #444;
+            text-align: center;
+        }
+        #lista-historial {
+            list-style-type: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        #lista-historial li {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #333;
+            border-left: 4px solid #0056b3;
+            display: flex;
+            justify-content: space-between;
+        }
+        .btn-limpiar {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .btn-limpiar:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h2>Calculadora de Divisas</h2>
+        
+        <div class="tasas-caja" id="tasas-info">
+            Cargando tasas del BCV...
+        </div>
+
+        <label for="tipo-tasa">Seleccione la tasa a usar:</label>
+        <select id="tipo-tasa" onchange="gestionarTasaPersonalizada()">
+            <option value="usd">Dólar Oficial (BCV)</option>
+            <option value="eur">Euro Oficial (BCV)</option>
+            <option value="custom">Tasa Personalizada</option>
+        </select>
+
+        <div id="contenedor-custom" style="display: none;">
+            <label for="tasa-custom">Ingrese su tasa (VES):</label>
+            <input type="number" id="tasa-custom" step="0.0001" placeholder="Ej: 36.50">
+        </div>
+
+        <label for="monto">Monto a calcular:</label>
+        <input type="number" id="monto" step="0.01" placeholder="Ingrese la cantidad">
+
+        <button class="btn-calcular" onclick="calcularTotal()">Calcular Bolívares</button>
+
+        <div class="resultado-caja">
+            <span id="resultado">0,00</span> VES
+            <div id="equivalencias" class="equivalencias-caja"></div>
+        </div>
+
+        <div class="historial-caja">
+            <h3>Historial de Cálculos</h3>
+            <ul id="lista-historial"></ul>
+            <button class="btn-limpiar" onclick="limpiarHistorial()">Limpiar Historial</button>
+        </div>
+    </div>
+
+    <script>
+        let tasaOficialUSD = 0;
+        let tasaOficialEUR = 0;
+        
+        let historial = JSON.parse(localStorage.getItem('historialCalculos')) || [];
+
+        // Función para resultados finales (corta a 2 decimales sin redondear hacia arriba)
+        function formatearMonedaTruncada(numero) {
+            // Se usa + 0.000001 para evitar los típicos errores de precisión de JavaScript
+            const truncado = Math.trunc((numero + 0.000001) * 100) / 100;
+            return truncado.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Función para las tasas de cambio (permite hasta 4 decimales)
+        function formatearTasa(numero) {
+            return numero.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+        }
+
+        async function obtenerTasas() {
+            try {
+                const respuesta = await fetch('https://ve.dolarapi.com/v1/cotizaciones');
+                const datos = await respuesta.json();
+                
+                const dataUSD = datos.find(d => d.moneda === 'USD' || d.nombre.includes('Dólar'));
+                const dataEUR = datos.find(d => d.moneda === 'EUR' || d.nombre.includes('Euro'));
+                
+                if (dataUSD) tasaOficialUSD = dataUSD.promedio;
+                if (dataEUR) tasaOficialEUR = dataEUR.promedio;
+
+                document.getElementById('tasas-info').innerHTML = 
+                    `💵 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 💶 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
+            } catch (error) {
+                document.getElementById('tasas-info').innerHTML = "No se pudieron cargar las tasas. Verifica tu conexión.";
+            }
+        }
+
+        function gestionarTasaPersonalizada() {
+            const tipo = document.getElementById('tipo-tasa').value;
+            const contenedorCustom = document.getElementById('contenedor-custom');
+            contenedorCustom.style.display = (tipo === 'custom') ? 'block' : 'none';
+        }
+
+        function calcularTotal() {
+            const tipo = document.getElementById('tipo-tasa').value;
+            const monto = parseFloat(document.getElementById('monto').value);
+            let tasaAplicada = 0;
+            let nombreTasa = "";
+
+            if (isNaN(monto) || monto <= 0) {
+                alert("Por favor, ingrese un monto válido.");
+                return;
+            }
+
+            if (tipo === 'usd') {
+                tasaAplicada = tasaOficialUSD;
+                nombreTasa = "USD";
+            } else if (tipo === 'eur') {
+                tasaAplicada = tasaOficialEUR;
+                nombreTasa = "EUR";
+            } else if (tipo === 'custom') {
+                tasaAplicada = parseFloat(document.getElementById('tasa-custom').value);
+                nombreTasa = "Manual";
+                if (isNaN(tasaAplicada) || tasaAplicada <= 0) {
+                    alert("Por favor, ingrese una tasa personalizada válida.");
+                    return;
+                }
+            }
+
+            if (tasaAplicada === 0) {
+                alert("Las tasas oficiales aún no han cargado.");
+                return;
+            }
+
+            // Cálculo principal
+            const total = monto * tasaAplicada;
+            const totalFormateado = formatearMonedaTruncada(total);
+            document.getElementById('resultado').innerText = totalFormateado;
+
+            // --- Equivalencias ---
+            let htmlEquivalencias = "Ese total equivale a:<br>";
+            let mostrarEquivalencias = false;
+
+            if (tipo !== 'usd' && tasaOficialUSD > 0) {
+                htmlEquivalencias += `💵 USD BCV: <b>${formatearMonedaTruncada(total / tasaOficialUSD)}</b><br>`;
+                mostrarEquivalencias = true;
+            }
+            if (tipo !== 'eur' && tasaOficialEUR > 0) {
+                htmlEquivalencias += `💶 EUR BCV: <b>${formatearMonedaTruncada(total / tasaOficialEUR)}</b><br>`;
+                mostrarEquivalencias = true;
+            }
+            if (tipo !== 'custom') {
+                const tasaCustomVal = parseFloat(document.getElementById('tasa-custom').value);
+                if (!isNaN(tasaCustomVal) && tasaCustomVal > 0) {
+                    htmlEquivalencias += `✍️ Tasa Manual: <b>${formatearMonedaTruncada(total / tasaCustomVal)}</b><br>`;
+                    mostrarEquivalencias = true;
+                }
+            }
+
+            const divEquivalencias = document.getElementById('equivalencias');
+            if (mostrarEquivalencias) {
+                divEquivalencias.innerHTML = htmlEquivalencias;
+                divEquivalencias.style.display = 'block';
+            } else {
+                divEquivalencias.style.display = 'none';
+            }
+
+            // Guardar en el historial (pasando los formatos correctos)
+            guardarEnHistorial(formatearMonedaTruncada(monto), nombreTasa, formatearTasa(tasaAplicada), totalFormateado);
+        }
+
+        function guardarEnHistorial(monto, moneda, tasa, total) {
+            historial.unshift({ monto, moneda, tasa, total });
+            if (historial.length > 15) {
+                historial.pop();
+            }
+            localStorage.setItem('historialCalculos', JSON.stringify(historial));
+            renderizarHistorial();
+        }
+
+        function renderizarHistorial() {
+            const lista = document.getElementById('lista-historial');
+            lista.innerHTML = '';
+            
+            historial.forEach(item => {
+                const nuevoItem = document.createElement('li');
+                nuevoItem.innerHTML = `
+                    <span><b>${item.monto}</b> (${item.moneda}) x ${item.tasa}</span>
+                    <span><b>${item.total}</b> VES</span>
+                `;
+                lista.appendChild(nuevoItem);
+            });
+        }
+
+        function limpiarHistorial() {
+            historial = [];
+            localStorage.removeItem('historialCalculos');
+            renderizarHistorial();
+        }
+
+        obtenerTasas();
+        renderizarHistorial();
+    </script>
+
+</body>
+</html>
