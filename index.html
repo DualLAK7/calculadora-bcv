@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
     <title>Calculadora BCV</title>
+    
+    <!-- Enlace para el ícono de la aplicación web -->
+    <link rel="manifest" href="manifest.json">
+    
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -22,7 +25,11 @@
             max-width: 400px; 
             transition: all 0.3s ease;
         }
-        h2 { margin-top: 0; color: #333; text-align: center; }
+        h2 { 
+            margin-top: 0; 
+            color: #333; 
+            text-align: center; 
+        }
         .tasas-caja { 
             background: #e9ecef; 
             padding: 15px; 
@@ -30,7 +37,14 @@
             margin-bottom: 20px; 
             text-align: center;
         }
-        label { font-weight: bold; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; font-size: 0.95em; }
+        label { 
+            font-weight: bold; 
+            color: #555; 
+            display: block; 
+            margin-top: 15px; 
+            margin-bottom: 5px; 
+            font-size: 0.95em; 
+        }
         input, select, button { 
             width: 100%; 
             padding: 12px; 
@@ -139,11 +153,44 @@
             border-radius: 6px;
         }
         .btn-limpiar:hover { background-color: #c82333; }
+        
+        /* Firma de Autor */
+        .credito {
+            margin-top: 18px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            text-align: center;
+            font-size: 0.72em;
+            color: #999;
+            letter-spacing: 0.6px;
+            user-select: none;
+        }
+        .credito span {
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #666, #0056b3, #666);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: brilloCredito 4s linear infinite;
+        }
+        .tema-dividir .credito span {
+            background: linear-gradient(90deg, #666, #00796b, #666);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        @keyframes brilloCredito {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Agregamos un ID y la clase del tema por defecto -->
     <div id="app-container" class="app-container tema-multiplicar">
         <h2>Calculadora de Divisas</h2>
         
@@ -185,6 +232,9 @@
             <h3>Historial de Cálculos</h3>
             <ul id="lista-historial"></ul>
             <button class="btn-limpiar" onclick="limpiarHistorial()">Limpiar Historial</button>
+            <div class="credito">
+                Created by <span>DualLAK7</span>
+            </div>
         </div>
     </div>
 
@@ -230,7 +280,6 @@
             const labelCustom = document.getElementById('label-custom');
             const appContainer = document.getElementById('app-container');
 
-            // --- Lógica nueva: Limpiar el campo del monto al cambiar de modo ---
             document.getElementById('monto').value = '';
 
             if (modo === 'multiplicar') {
@@ -423,6 +472,5 @@
         renderizarHistorial();
         actualizarInterfaz();
     </script>
-
 </body>
 </html>
