@@ -3,101 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora BCV</title>
-    
-    <!-- Enlace para el ícono de la aplicación web -->
+    <title>Calculadora BCV - Halloween Edition</title>
     <link rel="manifest" href="manifest.json">
-    
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f0f2f5; 
+            background-color: #121212; 
             display: flex; 
             justify-content: center; 
             padding: 20px;
+            color: #e0e0e0;
         }
         .app-container { 
-            background: white; 
+            background: #1e1e24; 
             padding: 25px; 
             border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
             width: 100%; 
             max-width: 400px; 
             transition: all 0.3s ease;
         }
         h2 { 
             margin-top: 0; 
-            color: #333; 
+            color: #ff9d00; 
             text-align: center; 
+            text-shadow: 1px 1px 5px rgba(255, 157, 0, 0.3);
         }
         .tasas-caja { 
-            background: #e9ecef; 
+            background: #2a2a35; 
             padding: 15px; 
             border-radius: 8px; 
             margin-bottom: 20px; 
             text-align: center;
+            border: 1px solid #444;
         }
         label { 
             font-weight: bold; 
-            color: #555; 
+            color: #aaa; 
             display: block; 
             margin-top: 15px; 
             margin-bottom: 5px; 
             font-size: 0.95em; 
         }
-        input, select, button { 
+        input, select { 
             width: 100%; 
             padding: 12px; 
-            border: 1px solid #ccc; 
+            background-color: #2c2c36;
+            color: #fff;
+            border: 1px solid #555; 
             border-radius: 6px; 
             box-sizing: border-box; 
             font-size: 16px;
         }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ff9d00;
+        }
         
-        /* Tema por defecto (Azul - Multiplicar) */
+        /* Tema Multiplicar (Naranja Calabaza) */
         .tema-multiplicar .select-destacado {
-            background-color: #e3f2fd;
-            border-color: #90caf9;
-            color: #0277bd;
-            font-weight: bold;
-            margin-bottom: 10px;
+            background-color: #3e2713;
+            border-color: #d35400;
+            color: #ffb84d;
         }
         .tema-multiplicar .btn-calcular { 
-            background-color: #0056b3; 
+            background-color: #d35400; 
             color: white; 
             border: none; 
             margin-top: 20px; 
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
             cursor: pointer; 
             font-weight: bold;
-            transition: background 0.3s;
+            transition: background 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 10px rgba(211, 84, 0, 0.4);
         }
-        .tema-multiplicar .btn-calcular:hover { background-color: #004494; }
+        .tema-multiplicar .btn-calcular:hover { background-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.6); }
+        .tema-multiplicar #lista-historial li { border-left: 4px solid #d35400; }
 
-        /* Tema secundario (Turquesa - Dividir) */
+        /* Tema Dividir (Morado Místico) */
         .tema-dividir .select-destacado {
-            background-color: #e0f2f1;
-            border-color: #80cbc4;
-            color: #00695c;
-            font-weight: bold;
-            margin-bottom: 10px;
+            background-color: #2c1a40;
+            border-color: #8e44ad;
+            color: #d7bde2;
         }
         .tema-dividir .btn-calcular { 
-            background-color: #00796b; 
+            background-color: #8e44ad; 
             color: white; 
             border: none; 
             margin-top: 20px; 
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
             cursor: pointer; 
             font-weight: bold;
-            transition: background 0.3s;
+            transition: background 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 10px rgba(142, 68, 173, 0.4);
         }
-        .tema-dividir .btn-calcular:hover { background-color: #004d40; }
+        .tema-dividir .btn-calcular:hover { background-color: #9b59b6; box-shadow: 0 0 15px rgba(155, 89, 182, 0.6); }
+        .tema-dividir #lista-historial li { border-left: 4px solid #8e44ad; }
 
         .resultado-caja { 
             margin-top: 20px; 
             padding: 15px; 
-            background: #d4edda; 
-            color: #155724; 
+            background: #111; 
+            color: #ff9d00; 
             border-radius: 8px; 
+            border: 1px solid #333;
             text-align: center; 
             font-size: 1.5em; 
             font-weight: bold;
@@ -105,25 +120,25 @@
         .equivalencias-caja {
             margin-top: 15px;
             font-size: 0.65em; 
-            color: #495057;
-            background: #e9ecef;
+            color: #bbb;
+            background: #222;
             padding: 10px;
             border-radius: 6px;
             display: none; 
             text-align: left;
             font-weight: normal;
         }
-        .equivalencias-caja b { color: #0056b3; }
+        .equivalencias-caja b { color: #ff9d00; }
         
         .historial-caja {
             margin-top: 25px;
             padding-top: 15px;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #333;
         }
         .historial-caja h3 {
             margin-top: 0;
             font-size: 1.1em;
-            color: #444;
+            color: #ddd;
             text-align: center;
         }
         #lista-historial {
@@ -133,55 +148,47 @@
             overflow-y: auto;
         }
         #lista-historial li {
-            background: #f8f9fa;
+            background: #2a2a35;
             padding: 10px;
             margin-bottom: 8px;
             border-radius: 6px;
             font-size: 0.9em;
-            color: #333;
-            border-left: 4px solid #0056b3;
+            color: #ccc;
             display: flex;
             justify-content: space-between;
         }
         .btn-limpiar {
-            background-color: #dc3545;
+            background-color: #555;
             color: white;
             border: none;
             margin-top: 10px;
             padding: 10px;
+            width: 100%;
             cursor: pointer;
             border-radius: 6px;
         }
-        .btn-limpiar:hover { background-color: #c82333; }
+        .btn-limpiar:hover { background-color: #777; }
         
-        /* Firma de Autor */
+        /* Firma de Autor - Estilo Halloween */
         .credito {
             margin-top: 18px;
             padding-top: 12px;
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             text-align: center;
             font-size: 0.72em;
-            color: #999;
+            color: #777;
             letter-spacing: 0.6px;
             user-select: none;
         }
         .credito span {
             font-weight: 700;
-            color: #666;
             letter-spacing: 1px;
-            background: linear-gradient(90deg, #666, #0056b3, #666);
+            background: linear-gradient(90deg, #d35400, #8e44ad, #d35400);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: brilloCredito 4s linear infinite;
-        }
-        .tema-dividir .credito span {
-            background: linear-gradient(90deg, #666, #00796b, #666);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
         @keyframes brilloCredito {
             0% { background-position: 200% center; }
@@ -192,7 +199,7 @@
 <body>
 
     <div id="app-container" class="app-container tema-multiplicar">
-        <h2>Calculadora de Divisas</h2>
+        <h2>🎃 Calculadora BCV 🦇</h2>
         
         <div class="tasas-caja" id="tasas-info">
             Cargando tasas del BCV...
@@ -265,7 +272,7 @@
                 if (dataEUR) tasaOficialEUR = dataEUR.promedio;
 
                 document.getElementById('tasas-info').innerHTML = 
-                    `💵 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 💶 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
+                    `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
             } catch (error) {
                 document.getElementById('tasas-info').innerHTML = "No se pudieron cargar las tasas. Verifica tu conexión.";
             }
@@ -347,17 +354,17 @@
                 let mostrarEquivalencias = false;
 
                 if (tipo !== 'usd' && tasaOficialUSD > 0) {
-                    htmlEquivalencias += `💵 USD BCV: <b>${formatearMonedaTruncada(total / tasaOficialUSD)}</b><br>`;
+                    htmlEquivalencias += `🎃 USD BCV: <b>${formatearMonedaTruncada(total / tasaOficialUSD)}</b><br>`;
                     mostrarEquivalencias = true;
                 }
                 if (tipo !== 'eur' && tasaOficialEUR > 0) {
-                    htmlEquivalencias += `💶 EUR BCV: <b>${formatearMonedaTruncada(total / tasaOficialEUR)}</b><br>`;
+                    htmlEquivalencias += `👻 EUR BCV: <b>${formatearMonedaTruncada(total / tasaOficialEUR)}</b><br>`;
                     mostrarEquivalencias = true;
                 }
                 if (tipo !== 'custom') {
                     const tasaCustom = parseFloat(document.getElementById('tasa-custom').value);
                     if (!isNaN(tasaCustom) && tasaCustom > 0) {
-                        htmlEquivalencias += `✍️ Tasa Manual: <b>${formatearMonedaTruncada(total / tasaCustom)}</b><br>`;
+                        htmlEquivalencias += `🦇 Tasa Manual: <b>${formatearMonedaTruncada(total / tasaCustom)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
@@ -404,7 +411,7 @@
                         mainTasa = tasaOficialEUR;
                         principalMostrado = true;
                     } else {
-                        htmlEquivalencias += `💶 EUR BCV: <b>${formatearMonedaTruncada(totalEUR)}</b><br>`;
+                        htmlEquivalencias += `👻 EUR BCV: <b>${formatearMonedaTruncada(totalEUR)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
@@ -417,7 +424,7 @@
                         mainMoneda = "Manual";
                         mainTasa = tasaCustomVal;
                     } else {
-                        htmlEquivalencias += `✍️ Tasa Manual: <b>${formatearMonedaTruncada(totalCustom)}</b><br>`;
+                        htmlEquivalencias += `🦇 Tasa Manual: <b>${formatearMonedaTruncada(totalCustom)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
