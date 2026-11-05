@@ -264,14 +264,14 @@
             // Sistema de redundancia: Intenta cargar APIs en orden de prioridad
             const apis = [
                 {
-                    // Opción 1: PyDolarVenezuela (Actualiza casi en tiempo real con el BCV)
+                    nombre: 'PyDolarVenezuela',
                     url: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv',
                     extraer: (datos) => {
                         return { usd: datos.monitors.usd.price, eur: datos.monitors.eur.price };
                     }
                 },
                 {
-                    // Opción 2: DolarApi (Servidor de respaldo por si el primero está caído)
+                    nombre: 'DolarApi',
                     url: 'https://ve.dolarapi.com/v1/cotizaciones',
                     extraer: (datos) => {
                         const dataUSD = datos.find(d => d.moneda === 'USD' || d.nombre.includes('Dólar'));
@@ -286,21 +286,31 @@
             for (let api of apis) {
                 try {
                     const respuesta = await fetch(api.url);
-                    if (!respuesta.ok) continue; // Si la conexión falla, intenta con la siguiente API
+                    if (!respuesta.ok) continue; 
                     
                     const datos = await respuesta.json();
                     const tasas = api.extraer(datos);
                     
                     if (tasas.usd > 0 && tasas.eur > 0) {
-                        // Escudo matemático anti-bugs de miles
-                        tasaOficialUSD = (tasas.usd < 100) ? tasas.usd * 1000 : tasas.usd;
-                        tasaOficialEUR = (tasas.eur < 100) ? tasas.eur * 1000 : tasas.eur;
+                        let escudoUSD = false;
+                        let escudoEUR = false;
 
-                        document.getElementById('tasas-info').innerHTML = 
-                            `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
+                        // Escudo matemático anti-bugs de miles
+                        if (tasas.usd < 100) { tasaOficialUSD = tasas.usd * 1000; escudoUSD = true; } 
+                        else { tasaOficialUSD = tasas.usd; }
+                        
+                        if (tasas.eur < 100) { tasaOficialEUR = tasas.eur * 1000; escudoEUR = true; } 
+                        else { tasaOficialEUR = tasas.eur; }
+
+                        let htmlInfo = `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> ${escudoUSD ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''} <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b> ${escudoEUR ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''}`;
+                        
+                        // Agregar el nombre de la API que se está utilizando
+                        htmlInfo += `<div style="margin-top: 10px; font-size: 0.7em; color: #888;">📡 Conectado a: <b>${api.nombre}</b></div>`;
+
+                        document.getElementById('tasas-info').innerHTML = htmlInfo;
                         
                         tasasCargadas = true;
-                        break; // Detiene la búsqueda al conseguir los datos con éxito
+                        break; 
                     }
                 } catch (error) {
                     console.log(`Fallo silencioso al conectar con ${api.url}`);
