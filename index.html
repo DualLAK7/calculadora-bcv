@@ -60,7 +60,7 @@
             border-color: #ff9d00;
         }
         
-        /* Tema Multiplicar (Naranja Calabaza) */
+        /* Tema Multiplicar */
         .tema-multiplicar .select-destacado {
             background-color: #3e2713;
             border-color: #d35400;
@@ -83,7 +83,7 @@
         .tema-multiplicar .btn-calcular:hover { background-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.6); }
         .tema-multiplicar #lista-historial li { border-left: 4px solid #d35400; }
 
-        /* Tema Dividir (Morado Místico) */
+        /* Tema Dividir */
         .tema-dividir .select-destacado {
             background-color: #2c1a40;
             border-color: #8e44ad;
@@ -169,7 +169,7 @@
         }
         .btn-limpiar:hover { background-color: #777; }
         
-        /* Firma de Autor - Estilo Halloween */
+        /* Firma de Autor */
         .credito {
             margin-top: 18px;
             padding-top: 12px;
@@ -261,20 +261,54 @@
         }
 
         async function obtenerTasas() {
-            try {
-                const respuesta = await fetch('https://ve.dolarapi.com/v1/cotizaciones');
-                const datos = await respuesta.json();
-                
-                const dataUSD = datos.find(d => d.moneda === 'USD' || d.nombre.includes('Dólar'));
-                const dataEUR = datos.find(d => d.moneda === 'EUR' || d.nombre.includes('Euro'));
-                
-                if (dataUSD) tasaOficialUSD = dataUSD.promedio;
-                if (dataEUR) tasaOficialEUR = dataEUR.promedio;
+            // Sistema de redundancia: Intenta cargar APIs en orden de prioridad
+            const apis = [
+                {
+                    // Opción 1: PyDolarVenezuela (Actualiza casi en tiempo real con el BCV)
+                    url: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv',
+                    extraer: (datos) => {
+                        return { usd: datos.monitors.usd.price, eur: datos.monitors.eur.price };
+                    }
+                },
+                {
+                    // Opción 2: DolarApi (Servidor de respaldo por si el primero está caído)
+                    url: 'https://ve.dolarapi.com/v1/cotizaciones',
+                    extraer: (datos) => {
+                        const dataUSD = datos.find(d => d.moneda === 'USD' || d.nombre.includes('Dólar'));
+                        const dataEUR = datos.find(d => d.moneda === 'EUR' || d.nombre.includes('Euro'));
+                        return { usd: dataUSD ? dataUSD.promedio : 0, eur: dataEUR ? dataEUR.promedio : 0 };
+                    }
+                }
+            ];
 
-                document.getElementById('tasas-info').innerHTML = 
-                    `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
-            } catch (error) {
-                document.getElementById('tasas-info').innerHTML = "No se pudieron cargar las tasas. Verifica tu conexión.";
+            let tasasCargadas = false;
+
+            for (let api of apis) {
+                try {
+                    const respuesta = await fetch(api.url);
+                    if (!respuesta.ok) continue; // Si la conexión falla, intenta con la siguiente API
+                    
+                    const datos = await respuesta.json();
+                    const tasas = api.extraer(datos);
+                    
+                    if (tasas.usd > 0 && tasas.eur > 0) {
+                        // Escudo matemático anti-bugs de miles
+                        tasaOficialUSD = (tasas.usd < 100) ? tasas.usd * 1000 : tasas.usd;
+                        tasaOficialEUR = (tasas.eur < 100) ? tasas.eur * 1000 : tasas.eur;
+
+                        document.getElementById('tasas-info').innerHTML = 
+                            `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b>`;
+                        
+                        tasasCargadas = true;
+                        break; // Detiene la búsqueda al conseguir los datos con éxito
+                    }
+                } catch (error) {
+                    console.log(`Fallo silencioso al conectar con ${api.url}`);
+                }
+            }
+
+            if (!tasasCargadas) {
+                document.getElementById('tasas-info').innerHTML = "No se pudieron cargar las tasas. Verifica tu conexión a internet.";
             }
         }
 
