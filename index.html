@@ -3,43 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora BCV - Halloween Edition</title>
+    <title>Calculadora BCV - Edición Navidad</title>
     <link rel="manifest" href="manifest.json">
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #121212; 
+            background-color: #0f1915; 
             display: flex; 
             justify-content: center; 
             padding: 20px;
-            color: #e0e0e0;
+            color: #eef5f0;
         }
         .app-container { 
-            background: #1e1e24; 
+            background: #182620; 
             padding: 25px; 
             border-radius: 12px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.55); 
             width: 100%; 
             max-width: 400px; 
+            border: 1px solid #2a3f36;
             transition: all 0.3s ease;
         }
         h2 { 
             margin-top: 0; 
-            color: #ff9d00; 
+            color: #ffd700; 
             text-align: center; 
-            text-shadow: 1px 1px 5px rgba(255, 157, 0, 0.3);
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
         }
         .tasas-caja { 
-            background: #2a2a35; 
+            background: #21332b; 
             padding: 15px; 
             border-radius: 8px; 
             margin-bottom: 20px; 
             text-align: center;
-            border: 1px solid #444;
+            border: 1px solid #355245;
         }
         label { 
             font-weight: bold; 
-            color: #aaa; 
+            color: #b8ccc2; 
             display: block; 
             margin-top: 15px; 
             margin-bottom: 5px; 
@@ -48,26 +49,27 @@
         input, select { 
             width: 100%; 
             padding: 12px; 
-            background-color: #2c2c36;
+            background-color: #22352d;
             color: #fff;
-            border: 1px solid #555; 
+            border: 1px solid #3c594c; 
             border-radius: 6px; 
             box-sizing: border-box; 
             font-size: 16px;
         }
         input:focus, select:focus {
             outline: none;
-            border-color: #ff9d00;
+            border-color: #ffd700;
         }
         
-        /* Tema Multiplicar */
+        /* Tema Multiplicar (Rojo Navidad) */
         .tema-multiplicar .select-destacado {
-            background-color: #3e2713;
-            border-color: #d35400;
-            color: #ffb84d;
+            background-color: #3d1816;
+            border-color: #c0392b;
+            color: #ff9a90;
+            font-weight: bold;
         }
         .tema-multiplicar .btn-calcular { 
-            background-color: #d35400; 
+            background-color: #c0392b; 
             color: white; 
             border: none; 
             margin-top: 20px; 
@@ -78,19 +80,23 @@
             cursor: pointer; 
             font-weight: bold;
             transition: background 0.3s, box-shadow 0.3s;
-            box-shadow: 0 0 10px rgba(211, 84, 0, 0.4);
+            box-shadow: 0 0 12px rgba(192, 57, 43, 0.45);
         }
-        .tema-multiplicar .btn-calcular:hover { background-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.6); }
-        .tema-multiplicar #lista-historial li { border-left: 4px solid #d35400; }
+        .tema-multiplicar .btn-calcular:hover { 
+            background-color: #e74c3c; 
+            box-shadow: 0 0 16px rgba(231, 76, 60, 0.65); 
+        }
+        .tema-multiplicar #lista-historial li { border-left: 4px solid #c0392b; }
 
-        /* Tema Dividir */
+        /* Tema Dividir (Verde Pino Navidad) */
         .tema-dividir .select-destacado {
-            background-color: #2c1a40;
-            border-color: #8e44ad;
-            color: #d7bde2;
+            background-color: #133824;
+            border-color: #27ae60;
+            color: #82e0aa;
+            font-weight: bold;
         }
         .tema-dividir .btn-calcular { 
-            background-color: #8e44ad; 
+            background-color: #1e8449; 
             color: white; 
             border: none; 
             margin-top: 20px; 
@@ -101,18 +107,21 @@
             cursor: pointer; 
             font-weight: bold;
             transition: background 0.3s, box-shadow 0.3s;
-            box-shadow: 0 0 10px rgba(142, 68, 173, 0.4);
+            box-shadow: 0 0 12px rgba(30, 132, 73, 0.45);
         }
-        .tema-dividir .btn-calcular:hover { background-color: #9b59b6; box-shadow: 0 0 15px rgba(155, 89, 182, 0.6); }
-        .tema-dividir #lista-historial li { border-left: 4px solid #8e44ad; }
+        .tema-dividir .btn-calcular:hover { 
+            background-color: #27ae60; 
+            box-shadow: 0 0 16px rgba(39, 174, 96, 0.65); 
+        }
+        .tema-dividir #lista-historial li { border-left: 4px solid #27ae60; }
 
         .resultado-caja { 
             margin-top: 20px; 
             padding: 15px; 
-            background: #111; 
-            color: #ff9d00; 
+            background: #101a16; 
+            color: #ffd700; 
             border-radius: 8px; 
-            border: 1px solid #333;
+            border: 1px solid #355245;
             text-align: center; 
             font-size: 1.5em; 
             font-weight: bold;
@@ -120,25 +129,26 @@
         .equivalencias-caja {
             margin-top: 15px;
             font-size: 0.65em; 
-            color: #bbb;
-            background: #222;
+            color: #cfe0d7;
+            background: #1b2b24;
             padding: 10px;
             border-radius: 6px;
             display: none; 
             text-align: left;
             font-weight: normal;
+            border: 1px solid #2c4439;
         }
-        .equivalencias-caja b { color: #ff9d00; }
+        .equivalencias-caja b { color: #ffd700; }
         
         .historial-caja {
             margin-top: 25px;
             padding-top: 15px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #2c4439;
         }
         .historial-caja h3 {
             margin-top: 0;
             font-size: 1.1em;
-            color: #ddd;
+            color: #e2ede7;
             text-align: center;
         }
         #lista-historial {
@@ -148,17 +158,17 @@
             overflow-y: auto;
         }
         #lista-historial li {
-            background: #2a2a35;
+            background: #21332b;
             padding: 10px;
             margin-bottom: 8px;
             border-radius: 6px;
             font-size: 0.9em;
-            color: #ccc;
+            color: #dce8e1;
             display: flex;
             justify-content: space-between;
         }
         .btn-limpiar {
-            background-color: #555;
+            background-color: #3a4f46;
             color: white;
             border: none;
             margin-top: 10px;
@@ -166,24 +176,25 @@
             width: 100%;
             cursor: pointer;
             border-radius: 6px;
+            transition: background 0.3s;
         }
-        .btn-limpiar:hover { background-color: #777; }
+        .btn-limpiar:hover { background-color: #4e695d; }
         
-        /* Firma de Autor */
+        /* Firma de Autor - Estilo Navidad */
         .credito {
             margin-top: 18px;
             padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
             text-align: center;
             font-size: 0.72em;
-            color: #777;
+            color: #8ca398;
             letter-spacing: 0.6px;
             user-select: none;
         }
         .credito span {
             font-weight: 700;
             letter-spacing: 1px;
-            background: linear-gradient(90deg, #d35400, #8e44ad, #d35400);
+            background: linear-gradient(90deg, #e74c3c, #ffd700, #2ecc71, #e74c3c);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -199,7 +210,7 @@
 <body>
 
     <div id="app-container" class="app-container tema-multiplicar">
-        <h2>🎃 Calculadora BCV 🦇</h2>
+        <h2>🎄 Calculadora BCV 🎅</h2>
         
         <div class="tasas-caja" id="tasas-info">
             Cargando tasas del BCV...
@@ -261,7 +272,6 @@
         }
 
         async function obtenerTasas() {
-            // Sistema de redundancia: Intenta cargar APIs en orden de prioridad
             const apis = [
                 {
                     nombre: 'PyDolarVenezuela',
@@ -295,17 +305,14 @@
                         let escudoUSD = false;
                         let escudoEUR = false;
 
-                        // Escudo matemático anti-bugs de miles
                         if (tasas.usd < 100) { tasaOficialUSD = tasas.usd * 1000; escudoUSD = true; } 
                         else { tasaOficialUSD = tasas.usd; }
                         
                         if (tasas.eur < 100) { tasaOficialEUR = tasas.eur * 1000; escudoEUR = true; } 
                         else { tasaOficialEUR = tasas.eur; }
 
-                        let htmlInfo = `🎃 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> ${escudoUSD ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''} <br> 👻 EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b> ${escudoEUR ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''}`;
-                        
-                        // Agregar el nombre de la API que se está utilizando
-                        htmlInfo += `<div style="margin-top: 10px; font-size: 0.7em; color: #888;">📡 Conectado a: <b>${api.nombre}</b></div>`;
+                        let htmlInfo = `🎅 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> ${escudoUSD ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''} <br> ❄️ EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b> ${escudoEUR ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''}`;
+                        htmlInfo += `<div style="margin-top: 10px; font-size: 0.7em; color: #9cb3a8;">📡 Conectado a: <b>${api.nombre}</b></div>`;
 
                         document.getElementById('tasas-info').innerHTML = htmlInfo;
                         
@@ -398,17 +405,17 @@
                 let mostrarEquivalencias = false;
 
                 if (tipo !== 'usd' && tasaOficialUSD > 0) {
-                    htmlEquivalencias += `🎃 USD BCV: <b>${formatearMonedaTruncada(total / tasaOficialUSD)}</b><br>`;
+                    htmlEquivalencias += `🎅 USD BCV: <b>${formatearMonedaTruncada(total / tasaOficialUSD)}</b><br>`;
                     mostrarEquivalencias = true;
                 }
                 if (tipo !== 'eur' && tasaOficialEUR > 0) {
-                    htmlEquivalencias += `👻 EUR BCV: <b>${formatearMonedaTruncada(total / tasaOficialEUR)}</b><br>`;
+                    htmlEquivalencias += `❄️ EUR BCV: <b>${formatearMonedaTruncada(total / tasaOficialEUR)}</b><br>`;
                     mostrarEquivalencias = true;
                 }
                 if (tipo !== 'custom') {
                     const tasaCustom = parseFloat(document.getElementById('tasa-custom').value);
                     if (!isNaN(tasaCustom) && tasaCustom > 0) {
-                        htmlEquivalencias += `🦇 Tasa Manual: <b>${formatearMonedaTruncada(total / tasaCustom)}</b><br>`;
+                        htmlEquivalencias += `🦌 Tasa Manual: <b>${formatearMonedaTruncada(total / tasaCustom)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
@@ -455,7 +462,7 @@
                         mainTasa = tasaOficialEUR;
                         principalMostrado = true;
                     } else {
-                        htmlEquivalencias += `👻 EUR BCV: <b>${formatearMonedaTruncada(totalEUR)}</b><br>`;
+                        htmlEquivalencias += `❄️ EUR BCV: <b>${formatearMonedaTruncada(totalEUR)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
@@ -468,7 +475,7 @@
                         mainMoneda = "Manual";
                         mainTasa = tasaCustomVal;
                     } else {
-                        htmlEquivalencias += `🦇 Tasa Manual: <b>${formatearMonedaTruncada(totalCustom)}</b><br>`;
+                        htmlEquivalencias += `🦌 Tasa Manual: <b>${formatearMonedaTruncada(totalCustom)}</b><br>`;
                         mostrarEquivalencias = true;
                     }
                 }
