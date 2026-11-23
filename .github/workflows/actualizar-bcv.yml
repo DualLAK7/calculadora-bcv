@@ -2,9 +2,9 @@ name: Actualizar Tasas BCV
 
 on:
   schedule:
-    # Se ejecuta a las 8:15 AM y cada hora de 3:15 PM a 7:15 PM (hora Venezuela)
+    # 8:15 AM y cada hora de 3:15 PM a 7:15 PM (hora Venezuela)
     - cron: '15 12,19,20,21,22,23 * * *'
-  workflow_dispatch: # Permite actualizarlo manualmente con un botón
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,34 +16,53 @@ jobs:
       - name: Descargar repositorio
         uses: actions/checkout@v4
 
+      - name: Instalar BeautifulSoup
+        run: pip install beautifulsoup4
+
       - name: Leer tasas directo del BCV
         run: |
+          curl -skL --max-time 30 \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            -H "Accept-Language: es-VE,es;q=0.9" \
+            https://www.bcv.org.ve/ -o bcv.html
+
           python3 - << 'EOF'
-          import urllib.request, ssl, re, json
+          import re, json
+          from bs4 import BeautifulSoup
           from datetime import datetime, timezone, timedelta
 
-          ctx = ssl.create_default_context()
-          ctx.check_hostname = False
-          ctx.verify_mode = ssl.CERT_NONE
+          with open('bcv.html', 'r', encoding='utf-8', errors='ignore') as f:
+              html = f.read()
 
-          req = urllib.request.Request(
-              'https://www.bcv.org.ve/',
-              headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'}
-          )
+          print("Longitud HTML recibido:", len(html))
+          soup = BeautifulSoup(html, 'html.parser')
 
-          with urllib.request.urlopen(req, context=ctx, timeout=25) as resp:
-              html = resp.read().decode('utf-8', errors='ignore')
-
-          def extraer(moneda_id):
-              m = re.search(rf'id="{moneda_id}".*?<strong>\s*([0-9.,]+)\s*</strong>', html, re.S)
+          def parsear(texto):
+              if not texto:
+                  return 0.0
+              m = re.search(r'([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]+|[0-9]+,[0-9]+)', texto)
               if not m:
                   return 0.0
               return float(m.group(1).replace('.', '').replace(',', '.'))
 
-          usd = extraer('dolar')
-          eur = extraer('euro')
-          m_fecha = re.search(r'date-display-single[^>]*>([^<]+)<', html)
-          fecha_valor = m_fecha.group(1).strip() if m_fecha else ''
+          def extraer_moneda(div_id, codigo):
+              bloque = soup.find(id=div_id)
+              if bloque:
+                  strong = bloque.find('strong')
+                  val = parsear(strong.get_text() if strong else bloque.get_text())
+                  if val > 0:
+                      return val
+              m = re.search(rf'\b{codigo}\b[^0-9]{{0,120}}([0-9]{{1,3}}(?:\.[0-9]{{3}})*,[0-9]+)', html, re.S | re.I)
+              if m:
+                  return float(m.group(1).replace('.', '').replace(',', '.'))
+              return 0.0
+
+          usd = extraer_moneda('dolar', 'USD')
+          eur = extraer_moneda('euro', 'EUR')
+
+          fecha_el = soup.select_one('.date-display-single')
+          fecha_valor = fecha_el.get_text(strip=True) if fecha_el else ''
 
           if usd > 0 and eur > 0:
               hora_ve = (datetime.now(timezone.utc) - timedelta(hours=4)).strftime('%d/%m/%Y %I:%M %p')
@@ -55,13 +74,16 @@ jobs:
               }
               with open('tasas.json', 'w', encoding='utf-8') as f:
                   json.dump(datos, f, ensure_ascii=False, indent=2)
-              print("Tasas guardadas:", datos)
+              print("Tasas guardadas con éxito:", datos)
           else:
-              raise Exception("No se encontraron tasas válidas en el HTML del BCV")
+              print("Vista previa de lo que devolvió el BCV:")
+              print(html[:800])
+              raise Exception(f"No se encontraron tasas válidas (USD={usd}, EUR={eur})")
           EOF
 
       - name: Guardar tasas.json si hubo cambios
         run: |
+          rm -f bcv.html
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add tasas.json
