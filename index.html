@@ -37,6 +37,23 @@
             margin-bottom: 20px; 
             text-align: center;
             border: 1px solid #355245;
+            position: relative;
+        }
+        .btn-refrescar {
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            color: #ffd700;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.75em;
+            cursor: pointer;
+            margin-top: 8px;
+            width: auto;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .btn-refrescar:hover {
+            background: rgba(255, 215, 0, 0.25);
         }
         label { 
             font-weight: bold; 
@@ -213,7 +230,7 @@
         <h2>🎄 Calculadora BCV 🎅</h2>
         
         <div class="tasas-caja" id="tasas-info">
-            Cargando tasas del BCV...
+            Cargando tasas... ⏳
         </div>
 
         <label for="modo-calculo">Tipo de Operación:</label>
@@ -272,60 +289,73 @@
         }
 
         async function obtenerTasas() {
-            const apis = [
+            const cajaInfo = document.getElementById('tasas-info');
+            cajaInfo.innerHTML = 'Cargando tasas... ⏳';
+
+            const fuentes = [
                 {
-                    nombre: 'PyDolarVenezuela',
-                    url: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv',
-                    extraer: (datos) => {
-                        return { usd: datos.monitors.usd.price, eur: datos.monitors.eur.price };
+                    nombre: 'BCV Oficial (Directo)',
+                    obtener: async () => {
+                        const res = await fetch(`./tasas.json?t=${Date.now()}`, { cache: 'no-store' });
+                        if (!res.ok) throw new Error('Sin tasas.json');
+                        const d = await res.json();
+                        return { usd: d.usd, eur: d.eur, fechaValor: d.fecha_valor || '' };
                     }
                 },
                 {
-                    nombre: 'DolarApi',
-                    url: 'https://ve.dolarapi.com/v1/cotizaciones',
-                    extraer: (datos) => {
+                    nombre: 'DolarApi (Respaldo)',
+                    obtener: async () => {
+                        const res = await fetch('https://ve.dolarapi.com/v1/cotizaciones');
+                        if (!res.ok) throw new Error('Error DolarApi');
+                        const datos = await res.json();
                         const dataUSD = datos.find(d => d.moneda === 'USD' || d.nombre.includes('Dólar'));
                         const dataEUR = datos.find(d => d.moneda === 'EUR' || d.nombre.includes('Euro'));
-                        return { usd: dataUSD ? dataUSD.promedio : 0, eur: dataEUR ? dataEUR.promedio : 0 };
+                        return { 
+                            usd: dataUSD ? dataUSD.promedio : 0, 
+                            eur: dataEUR ? dataEUR.promedio : 0,
+                            fechaValor: ''
+                        };
                     }
                 }
             ];
 
             let tasasCargadas = false;
 
-            for (let api of apis) {
+            for (let fuente of fuentes) {
                 try {
-                    const respuesta = await fetch(api.url);
-                    if (!respuesta.ok) continue; 
+                    const datos = await fuente.obtener();
                     
-                    const datos = await respuesta.json();
-                    const tasas = api.extraer(datos);
-                    
-                    if (tasas.usd > 0 && tasas.eur > 0) {
+                    if (datos.usd > 0 && datos.eur > 0) {
                         let escudoUSD = false;
                         let escudoEUR = false;
 
-                        if (tasas.usd < 100) { tasaOficialUSD = tasas.usd * 1000; escudoUSD = true; } 
-                        else { tasaOficialUSD = tasas.usd; }
+                        if (datos.usd < 100) { tasaOficialUSD = datos.usd * 1000; escudoUSD = true; } 
+                        else { tasaOficialUSD = datos.usd; }
                         
-                        if (tasas.eur < 100) { tasaOficialEUR = tasas.eur * 1000; escudoEUR = true; } 
-                        else { tasaOficialEUR = tasas.eur; }
+                        if (datos.eur < 100) { tasaOficialEUR = datos.eur * 1000; escudoEUR = true; } 
+                        else { tasaOficialEUR = datos.eur; }
 
-                        let htmlInfo = `🎅 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> ${escudoUSD ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''} <br> ❄️ EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b> ${escudoEUR ? '<span title="Escudo Matemático Activo">🛡️</span>' : ''}`;
-                        htmlInfo += `<div style="margin-top: 10px; font-size: 0.7em; color: #9cb3a8;">📡 Conectado a: <b>${api.nombre}</b></div>`;
-
-                        document.getElementById('tasas-info').innerHTML = htmlInfo;
+                        let htmlInfo = `🎅 USD: <b>${formatearTasa(tasaOficialUSD)} VES</b> ${escudoUSD ? '<span title="Escudo Activo">🛡️</span>' : ''} <br>`;
+                        htmlInfo += `❄️ EUR: <b>${formatearTasa(tasaOficialEUR)} VES</b> ${escudoEUR ? '<span title="Escudo Activo">🛡️</span>' : ''}`;
                         
+                        if (datos.fechaValor) {
+                            htmlInfo += `<div style="margin-top: 8px; font-size: 0.72em; color: #ffd700;">📅 Fecha Valor: <b>${datos.fechaValor}</b></div>`;
+                        }
+
+                        htmlInfo += `<div style="margin-top: 4px; font-size: 0.68em; color: #9cb3a8;">📡 Fuente: <b>${fuente.nombre}</b></div>`;
+                        htmlInfo += `<button class="btn-refrescar" onclick="obtenerTasas()">🔄 Actualizar tasas</button>`;
+
+                        cajaInfo.innerHTML = htmlInfo;
                         tasasCargadas = true;
                         break; 
                     }
                 } catch (error) {
-                    console.log(`Fallo silencioso al conectar con ${api.url}`);
+                    console.log(`Fallo en ${fuente.nombre}`);
                 }
             }
 
             if (!tasasCargadas) {
-                document.getElementById('tasas-info').innerHTML = "No se pudieron cargar las tasas. Verifica tu conexión a internet.";
+                cajaInfo.innerHTML = `No se pudieron cargar las tasas. Verifica tu conexión.<br><button class="btn-refrescar" onclick="obtenerTasas()">🔄 Reintentar</button>`;
             }
         }
 
